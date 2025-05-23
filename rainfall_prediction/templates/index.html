@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌧️ Navi Mumbai Rainfall Prediction</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+   <style>
+    body {
+      background-image: url("{{ url_for('static', filename='images/background.jpg') }}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: -1;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 35px;
+      border-radius: 18px;
+      margin-top: 80px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.4);
+      width: 350px;
+      text-align: center;
+      backdrop-filter: blur(6px);
+      animation: fadeIn 0.9s ease;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: #28a745;
+    }
+
+    input, button {
+      padding: 12px;
+      margin: 10px 0;
+      width: 90%;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+    }
+
+    input {
+      background: #fff;
+      color: #222;
+    }
+
+    button {
+      background-color: #28a745;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    button:hover {
+      background-color: #218838;
+      transform: scale(1.04);
+    }
+
+    #accuracyDisplay {
+      font-size: 14px;
+      margin-top: 14px;
+      color: #ddd;
+    }
+
+    .footer {
+      margin-top: auto;
+      width: 100%;
+      text-align: center;
+      padding: 14px 0;
+      background: rgba(0,0,0,0.6);
+      color: #ccc;
+      font-size: 13px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  /* Floating Chatbot Icon Button */
+.chatbot-icon {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background-color: #28a745;
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+  box-shadow: 0 5px 12px rgba(0,0,0,0.3);
+  z-index: 999;
+  transition: all 0.3s ease;
+}
+
+.chatbot-icon:hover {
+  background-color: #218838;
+  transform: scale(1.1);
+}
+
+/* Chat Window */
+.chatbox {
+  position: fixed;
+  bottom: 80px;
+  right: 25px;
+  width: 300px;
+  background: #222;
+  color: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  z-index: 999;
+  animation: slideUp 0.3s ease;
+}
+
+/* Header */
+.chat-header {
+  background: #28a745;
+  padding: 12px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+}
+
+/* Message Area */
+.chat-messages {
+  padding: 12px;
+  height: 220px;
+  overflow-y: auto;
+  font-size: 14px;
+  background: #111;
+}
+
+/* Input Area */
+.chat-input {
+  display: flex;
+  border-top: 1px solid #333;
+}
+
+.chat-input {
+  display: flex;
+  border-top: 1px solid #333;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  background: #333;
+  color: #fff;
+  border-top-left-radius: 8px;
+}
+
+.chat-input button {
+  width: 45px;
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 0;
+  cursor: pointer;
+  font-size: 18px;
+  border-top-right-radius: 8px;
+  flex-shrink: 0;
+  transition: background 0.3s ease;
+}
+
+.chat-input button:hover {
+  background: #218838;
+}
+
+
+/* Message bubbles (optional enhancement) */
+.chat-messages div {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+
+
+  </style>
+
+
+
+</head>
+
+<body>
+
+  <div class="overlay"></div>
+
+  <div class="container">
+    <h1>🌧️ Rainfall Prediction</h1>
+
+    <form method="POST" action="/report">
+      <input type="number" step="any" name="temperature" placeholder="Temperature (°C)" required><br>
+      <input type="number" step="any" name="humidity" placeholder="Humidity (%)" required><br>
+      <input type="number" step="any" name="pressure" placeholder="Pressure (hPa)" required><br>
+      <input type="number" step="any" name="wind_speed" placeholder="Wind Speed (km/h)" required><br>
+      <button type="submit">Predict Rainfall</button>
+    </form>
+
+    
+  </div>
+
+
+  <!-- Chatbot -->
+  <div class="chatbot-icon" onclick="toggleChat()">💬</div>
+
+  <div id="chatbox" class="chatbox">
+    <div class="chat-header">WeatherBot <span onclick="toggleChat()" style="cursor:pointer;">✖</span></div>
+    <div class="chat-messages" id="messages"></div>
+    <div class="chat-input">
+      <input type="text" id="userInput" placeholder="Ask me..." onkeydown="if(event.key==='Enter') sendMessage()">
+      <button onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    &copy; 2025 Rainfall Prediction | Navi Mumbai
+  </footer>
+
+
+
+<script>
+function toggleChat() {
+  const chatbox = document.getElementById("chatbox");
+  chatbox.style.display = chatbox.style.display === "flex" ? "none" : "flex";
+  chatbox.style.flexDirection = "column";
+}
+
+function sendMessage() {
+  const input = document.getElementById("userInput");
+  if (!input) return;
+  const message = input.value.trim();
+  if (message === "") return;
+
+  const messagesContainer = document.getElementById("messages");
+  messagesContainer.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  const typingMsg = document.createElement("div");
+  typingMsg.innerHTML = "<strong>Bot:</strong> <em>typing...</em>";
+  messagesContainer.appendChild(typingMsg);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  setTimeout(() => {
+    messagesContainer.removeChild(typingMsg);
+
+    if (message.toLowerCase().includes("weather")) {
+      getMumbaiWeather();
+    } else {
+      let reply = getBotReply(message);
+      messagesContainer.innerHTML += `<div><strong>Bot:</strong> ${reply}</div>`;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }, 600);
+
+  input.value = "";
+}
+
+function getBotReply(message) {
+  const text = message.toLowerCase();
+
+  if (text.includes("hello") || text.includes("hi")) {
+    return "Hello there! 👋 How can I assist you?";
+  } else if (text.includes("accuracy")) {
+    return "Our rainfall prediction model’s accuracy is displayed on the homepage 📊.";
+  } else if (text.includes("how to use")) {
+    return "Just enter Temperature, Humidity, Pressure, Wind Speed — then click Predict!";
+  } else if (text.includes("thank")) {
+    return "You're welcome! 🌈";
+  } else if (text.includes("help")) {
+    return "You can ask me about 'current weather', 'accuracy', or how to use the prediction form.";
+  } else {
+    const replies = [
+      "I'm your WeatherBot 🌦️ — ask me for 'current weather' or model 'accuracy'!",
+      "Type 'current weather' to get Mumbai’s latest conditions ☁️.",
+      "Need help? Type 'help' 📖."
+    ];
+    return replies[Math.floor(Math.random() * replies.length)];
+  }
+}
+
+function getMumbaiWeather() {
+  const apiKey = 'cdd1d75e4da5755bd42a1342f6a73512';  // Replace with your OpenWeatherMap API key
+  const url = `https://api.openweathermap.org/data/2.5/weather?q=Mumbai&appid=${apiKey}&units=metric`;
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      const reply = `
+        🌡️ <strong>Temperature:</strong> ${data.main.temp}°C<br>
+        💧 <strong>Humidity:</strong> ${data.main.humidity}%<br>
+        🌀 <strong>Wind Speed:</strong> ${data.wind.speed} m/s<br>
+        📈 <strong>Pressure:</strong> ${data.main.pressure} hPa
+      `;
+      document.getElementById("messages").innerHTML += `<div><strong>Bot:</strong> ${reply}</div>`;
+      document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+    })
+    .catch(() => {
+      document.getElementById("messages").innerHTML += `<div><strong>Bot:</strong> Sorry — couldn’t fetch live weather 🌧️.</div>`;
+    });
+}
+
+</script>
+
+</body>
+</html>

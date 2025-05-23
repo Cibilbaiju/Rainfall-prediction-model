@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌧️ Rainfall Prediction Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background-image: url("{{ url_for('static', filename='images/background.jpg') }}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: -1;
+    }
+
+    .report-container {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 35px;
+      border-radius: 18px;
+      max-width: 850px;
+      margin-top: 80px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.4);
+      backdrop-filter: blur(6px);
+      animation: fadeIn 0.7s ease;
+    }
+
+    h1 {
+      color: #28a745;
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    p.intro {
+      text-align: center;
+      color: #ccc;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      color: #28a745;
+      margin-top: 25px;
+      margin-bottom: 10px;
+    }
+
+    .section {
+      margin: 20px 0;
+    }
+
+    .actions {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .actions button, .actions a {
+      background: #28a745;
+      color: white;
+      padding: 12px 20px;
+      margin: 10px 8px;
+      border: none;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .actions button:hover, .actions a:hover {
+      background: #218838;
+      transform: scale(1.05);
+    }
+
+    canvas {
+      margin-top: 20px;
+      background: rgba(250, 250, 250, 0.1);
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    iframe {
+      display: block;
+      margin: 30px auto 0;
+      border-radius: 10px;
+      border: 3px solid #ccc;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .footer {
+      margin-top: auto;
+      width: 100%;
+      text-align: center;
+      padding: 14px 0;
+      background: rgba(0,0,0,0.6);
+      color: #ccc;
+      font-size: 13px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+    }
+    #accuracyValue {
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-left: 8px;
+  color: #fff;
+}
+
+.high-accuracy {
+  background: #28a745;
+}
+
+.medium-accuracy {
+  background: #ffc107;
+  color: #000;
+}
+
+.low-accuracy {
+  background: #dc3545;
+}
+.pdf-mode {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+.pdf-mode h1, 
+.pdf-mode h2, 
+.pdf-mode p, 
+.pdf-mode strong, 
+.pdf-mode em {
+  color: #000 !important;
+}
+
+.pdf-mode canvas {
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.pdf-mode iframe {
+  border: 1px solid #000 !important;
+}
+.pdf-mode iframe {
+  display: none !important;
+}
+
+
+  /* Existing styles */
+
+  /* Add print-specific styles */
+  @media print {
+    body {
+      background: #fff !important; /* Ensure white background for printing */
+      color: #000 !important; /* Ensure black text for better visibility */
+    }
+
+    .overlay {
+      display: none !important; /* Hide the overlay */
+    }
+
+    .report-container {
+      background: #fff !important; /* Fully opaque background for printing */
+      color: #000 !important; /* Dark text color */
+    }
+
+    canvas {
+      background: #fff !important; /* Ensure charts have a white background */
+      box-shadow: none !important;
+    }
+
+    iframe {
+      display: none !important; /* Hide iframes during printing */
+    }
+
+    .actions {
+      display: none !important; /* Hide buttons and links */
+    }
+  }
+
+
+
+  </style>
+</head>
+
+<body>
+  <div class="overlay"></div>
+  <div class="report-container" id="reportSection">
+    <h1>🌧️ Rainfall Prediction Report</h1>
+    <p class="intro">Generated using ml prediction model</p>
+
+    <div class="section">
+      <h2>📈 Input Data</h2>
+      <p><strong>Temperature:</strong> {{ temperature }}°C</p>
+      <p><strong>Humidity:</strong> {{ humidity }}%</p>
+      <p><strong>Pressure:</strong> {{ pressure }} hPa</p>
+      <p><strong>Wind Speed:</strong> {{ wind_speed }} km/h</p>
+    </div>
+
+    <div class="section">
+      <h2>💧 Predicted Rainfall</h2>
+      <p><strong>Result:</strong> {{ prediction }} mm</p>
+      <p><em>(This is an estimated rainfall based on the input weather parameters.)</em></p>
+    </div>
+
+    <div class="section">
+      <h2>✅ Model Accuracy</h2>
+      <p><strong>Accuracy:</strong> 
+        <span id="accuracyValue">{{ accuracy }}%</span>
+      </p>
+      <p><em>(This reflects the AI model’s accuracy based on historical rainfall data for Navi Mumbai.)</em></p>
+    </div>
+
+    <div class="section">
+      <h2>📊 Visualization</h2>
+      <canvas id="resultChart" width="650" height="300"></canvas>
+    </div>
+
+    <div class="actions">
+      <button id="downloadBtn" onclick="downloadPDF()">📄 Download Full Report (PDF)</button>
+      <a href="/">⬅️ New Prediction</a>
+    </div>
+
+    <div class="section">
+      <h2>📍 Navi Mumbai Map</h2>
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241414.6053891263!2d72.86696406526478!3d19.015173230018718!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b9f0b81f13ad%3A0x3c12f7681185f869!2sNavi%20Mumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1747073707106!5m2!1sen!2sin"
+        width="100%" height="250" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </div>
+
+  <footer class="footer">
+    &copy; 2025 Rainfall Prediction | Navi Mumbai
+  </footer>
+
+  <script>
+    const ctx = document.getElementById('resultChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Temperature','Humidity','Pressure','Wind Speed'],
+        datasets: [{
+          label: 'Weather Parameters',
+          data: [{{ temperature }}, {{ humidity }}, {{ pressure }}, {{ wind_speed }}],
+          borderColor: '#28a745',
+          backgroundColor: '#28a745',
+          fill: false,
+          tension: 0.3,
+          pointStyle: 'circle',
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          borderDash: [5,5]  // This makes the line dotted
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            ticks: { color: '#fff' },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#fff' },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: '#fff' }
+          }
+        }
+      }
+    });
+
+    // PDF export function
+function downloadPDF() {
+    const element = document.getElementById('reportSection');
+    const overlay = document.querySelector('.overlay'); // Select the overlay
+
+    // Temporarily hide the overlay during PDF export
+    if (overlay) {
+      overlay.style.display = 'none';
+    }
+
+    // Temporarily add a class to override transparency for PDF export
+    element.classList.add('pdf-mode');
+
+    // Capture the chart canvas and redraw it with black text and lines
+    const chartCanvas = document.getElementById('resultChart');
+    const ctx = chartCanvas.getContext('2d');
+
+    // Update chart colors for PDF export
+    const chartInstance = Chart.getChart('resultChart');
+    chartInstance.options.scales.x.ticks.color = '#000';
+    chartInstance.options.scales.x.grid.color = 'rgba(0,0,0,0.1)';
+    chartInstance.options.scales.y.ticks.color = '#000';
+    chartInstance.options.scales.y.grid.color = 'rgba(0,0,0,0.1)';
+    chartInstance.options.plugins.legend.labels.color = '#000';
+    chartInstance.data.datasets[0].borderColor = '#000';
+    chartInstance.data.datasets[0].backgroundColor = '#000';
+    chartInstance.update();
+
+    // Generate PDF
+    const opt = {
+      margin: 0.4,
+      filename: 'Rainfall_Prediction_Report.pdf',
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: { scale: 3, backgroundColor: '#fff' },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+    };
+
+    html2pdf().from(element).set(opt).save().then(() => {
+      // After saving, restore original styles and chart settings
+      element.classList.remove('pdf-mode');
+      if (overlay) {
+        overlay.style.display = 'block';
+      }
+
+      // Restore original chart colors
+      chartInstance.options.scales.x.ticks.color = '#fff';
+      chartInstance.options.scales.x.grid.color = 'rgba(255,255,255,0.1)';
+      chartInstance.options.scales.y.ticks.color = '#fff';
+      chartInstance.options.scales.y.grid.color = 'rgba(255,255,255,0.1)';
+      chartInstance.options.plugins.legend.labels.color = '#fff';
+      chartInstance.data.datasets[0].borderColor = '#28a745';
+      chartInstance.data.datasets[0].backgroundColor = '#28a745';
+      chartInstance.update();
+    });
+  }
+
+  document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
+// PDF export function with temporary style adjustments
+
+    // Dynamically color the accuracy badge based on value
+    const accuracy = parseFloat({{ accuracy }});
+    const accuracySpan = document.getElementById('accuracyValue');
+
+    if (accuracy >= 90) {
+      accuracySpan.classList.add('high-accuracy');
+    } else if (accuracy >= 75) {
+      accuracySpan.classList.add('medium-accuracy');
+    } else {
+      accuracySpan.classList.add('low-accuracy');
+    }
+document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
+  </script>
+
+</body>
+</html>
